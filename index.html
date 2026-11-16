@@ -81,7 +81,7 @@ h2{font-family:var(--f-display);font-size:24px;margin:0;text-wrap:balance}
 .dots{display:grid;grid-template-columns:repeat(11,26px);gap:2px;justify-items:center;align-items:center}
 .row.hdr{background:transparent;border-color:transparent;padding-block:0;position:sticky;top:calc(env(safe-area-inset-top,0px) + 52px);z-index:3}
 .row.hdr .dots span{font-size:10px;color:var(--muted);white-space:nowrap;background:var(--bg);padding:0 1px;border-radius:3px}
-@media (min-width:761px){.row{grid-template-columns:200px 306px 270px minmax(0,1fr)}}.dots i{width:14px;height:14px;border-radius:50%;background:var(--dot-off)}
+@media (min-width:920px){.row{grid-template-columns:200px 306px 270px minmax(0,1fr)}}.dots i{width:14px;height:14px;border-radius:50%;background:var(--dot-off)}
 .dots i.on{background:var(--accent)}
 .dots i.pre{background:transparent;border:1px dashed var(--line)}
 .nums{display:flex;gap:14px;font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);white-space:nowrap}
@@ -111,7 +111,7 @@ td.h57{background:var(--g57-soft)} td.h24{background:var(--g24-soft)} td.h1{back
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pill.p-yel{color:var(--g57)}}
 .note{font-size:12px;color:var(--muted)}
 .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
-@media (max-width:760px){
+@media (max-width:919px){
   .row{grid-template-columns:1fr auto}
   .row .dots{grid-column:1 / -1;order:3}
   .row .tip{grid-column:1 / -1;order:4}
