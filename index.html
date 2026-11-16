@@ -78,7 +78,10 @@ h2{font-family:var(--f-display);font-size:24px;margin:0;text-wrap:balance}
 .chip{font-size:11px;padding:1px 7px;border-radius:999px;background:var(--accent-soft);color:var(--ink);white-space:nowrap}
 .chip.area{background:transparent;border:1px solid var(--line);color:var(--muted)}
 .dots{display:grid;grid-template-columns:repeat(11,14px);gap:4px}
-.dots i{width:14px;height:14px;border-radius:50%;background:var(--dot-off)}
+.dots{display:grid;grid-template-columns:repeat(11,26px);gap:2px;justify-items:center;align-items:center}
+.row.hdr{background:transparent;border-color:transparent;padding-block:0;position:sticky;top:calc(env(safe-area-inset-top,0px) + 52px);z-index:3}
+.row.hdr .dots span{font-size:10px;color:var(--muted);white-space:nowrap;background:var(--bg);padding:0 1px;border-radius:3px}
+@media (min-width:761px){.row{grid-template-columns:200px 306px 270px minmax(0,1fr)}}.dots i{width:14px;height:14px;border-radius:50%;background:var(--dot-off)}
 .dots i.on{background:var(--accent)}
 .dots i.pre{background:transparent;border:1px dashed var(--line)}
 .nums{display:flex;gap:14px;font-variant-numeric:tabular-nums;font-size:13px;color:var(--muted);white-space:nowrap}
@@ -245,7 +248,7 @@ function groupView(v){
   h += `<div class="panel"><h3>各區比較</h3><div class="tbl"><table><thead><tr><th>區</th><th>名單</th><th>主日平均</th><th>主日 8～11 次</th><th>主日 5～7 次</th><th>主日 2～4 次</th><th>主日 1 次</th><th>主日 0 次</th><th>有家聚會</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
   h += barChart(W.map((_,i)=>allA.reduce((t,a)=>t+((wk[a]||[])[i]||0),0)), null, `每週主日${G}人數（三個大區合計）`);
   h += `<div class="panel advice"><h3>觀察與建議</h3><ul>${DATA.gadvice[G].map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>`;
-  h += `<div class="dotkey">每個圓點＝一個主日（深綠＝有來）：<div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div></div>`;
+  h += `<div class="dotkey">每個圓點＝一個主日（深綠＝有來）；上方日期對應每一欄</div><div class="row hdr" aria-hidden="true"><div></div><div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div><div></div><div></div></div>`;
   const status = p => { const H=p.V+p.O; if(p.S>=8) return ['穩定','p-ok']; if(p.S>=5) return ['接近穩定','p-yel']; if(p.S>=1) return [H?'不穩定':'不穩定・無家聚會','p-org']; return ['有家聚會，未來主日','p-red']; };
   const sec = (label, areas, sub) => {
     const g = ppl.filter(p=>areas.includes(p.a)).sort((a,b)=>(areas.indexOf(a.a)-areas.indexOf(b.a))||(b.S-a.S)||((b.V+b.O)-(a.V+a.O)));
@@ -288,7 +291,7 @@ function districtView(v){
   else if (v.group === '23') { const b = baseInfo('二十三大區'); h += `<p class="note">二十三大區（全區）主日基數 ${b.base} 人，全區每週主日平均（扣兒童）${b.avgA.toFixed(1)} 人，達成率 ${Math.round(b.pct*100)}%。基數設在大區層級，小區沒有個別基數。</p>`; }
   if (v.id === 'd23') h += areaTable(v.areas, '各小區比較', true);
   h += weeklyChart(v.areas);
-  h += `<div class="dotkey">每個圓點＝一個主日（深綠＝有來）：<div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div></div>`;
+  h += `<div class="dotkey">每個圓點＝一個主日（深綠＝有來）；上方日期對應每一欄</div><div class="row hdr" aria-hidden="true"><div></div><div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div><div></div><div></div></div>`;
   const bands = [['b57','主日 5～7 次','接近穩定，差一步就固定',5,7],['b24','主日 2～4 次','不穩定，需要牧養',2,4],['b1','主日 1 次','幾乎流失或剛來，需主動聯繫',1,1]];
   for (const [cls,t,d,lo,hi] of bands){
     const g = ppl.filter(p => p.S>=lo && p.S<=hi).sort((a,b) => (v.areas.indexOf(a.a)-v.areas.indexOf(b.a)) || (b.S-a.S) || ((a.V+a.O)-(b.V+b.O)));
@@ -360,7 +363,7 @@ function baptism(){
     <div class="tile c24"><span class="k">主日 1～4 次</span><span class="v">${list.filter(p=>p.S>=1&&p.S<=4).length}<small>人</small></span></div>
     <div class="tile c1"><span class="k">主日、家聚會都是 0</span><span class="v">${red}<small>人</small></span></div>
   </div>`;
-  h += `<div class="dotkey">每個圓點＝一個主日（深綠＝有來）：<div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div></div><div class="rows">`;
+  h += `<div class="dotkey">每個圓點＝一個主日（深綠＝有來）；上方日期對應每一欄</div><div class="row hdr" aria-hidden="true"><div></div><div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div><div></div><div></div></div><div class="rows">`;
   const sundays = DATA.sundays;
   for (const p of list){
     const [st,cls] = status(p); const home=p.V+p.O;
