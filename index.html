@@ -271,12 +271,12 @@ function sumStat(areas){ const s=[0,0,0,0,0,0]; areas.forEach(a => DATA.areas[a]
 function districtView(v){
   const ppl = DATA.people.filter(p => v.areas.includes(p.a));
   const st = sumStat(v.areas.filter(a => DATA.areas[a]));
-  const avg = v.areas.reduce((a,x)=>a+DATA.areas[x].wk.reduce((p,q)=>p+q,0),0)/11;
+  const avg = adultWeekly(v.areas).reduce((p,q)=>p+q,0)/11;
   const noHome = ppl.filter(p => p.V+p.O===0).length;
   const multi = v.areas.length > 1;
   let h = `<div><h2>${v.title}　<span class="sun">主日出席</span></h2><p class="lede">名單 ${st[0]} 人。下面列出 9 月以來主日出席 1～7 次的人，依次數分三段；每列的 11 個圓點代表 11 個主日。</p></div>`;
   h += `<div class="tiles">
-    <div class="tile cacc"><span class="k">每週主日平均</span><span class="v">${avg.toFixed(1)}<small>人</small></span></div>
+    <div class="tile cacc"><span class="k">每週主日平均（扣兒童）</span><span class="v">${avg.toFixed(1)}<small>人</small></span></div>
     <div class="tile cok"><span class="k">主日 8～11 次（穩定）</span><span class="v">${st[5]}<small>人</small></span></div>
     <div class="tile c57"><span class="k">主日 5～7 次</span><span class="v">${st[4]}<small>人</small></span></div>
     <div class="tile c24"><span class="k">主日 2～4 次</span><span class="v">${st[3]}<small>人</small></span></div>
@@ -312,14 +312,14 @@ function areaTable(areas, title, withSum){
   let rows = '';
   for (const a of areas){
     const d = DATA.areas[a]; if (!d) continue; const s = d.stat;
-    const avg = d.wk.reduce((p,q)=>p+q,0)/11, hv = d.wv.reduce((p,q)=>p+q,0)/11;
+    const avg = adultWeekly([a]).reduce((p,q)=>p+q,0)/11, hv = d.wv.reduce((p,q)=>p+q,0)/11;
     rows += `<tr><td>${a}</td><td>${s[0]}</td><td>${avg.toFixed(1)}</td><td>${hv.toFixed(1)}</td><td>${s[5]}</td><td class="h57">${s[4]}</td><td class="h24">${s[3]}</td><td class="h1">${s[2]}</td><td>${s[1]}</td></tr>`;
   }
   if (withSum){
-    const s = sumStat(areas); const avg = areas.reduce((a,x)=>a+DATA.areas[x].wk.reduce((p,q)=>p+q,0),0)/11; const hv = areas.reduce((a,x)=>a+DATA.areas[x].wv.reduce((p,q)=>p+q,0),0)/11;
+    const s = sumStat(areas); const avg = adultWeekly(areas).reduce((p,q)=>p+q,0)/11; const hv = areas.reduce((a,x)=>a+DATA.areas[x].wv.reduce((p,q)=>p+q,0),0)/11;
     rows += `<tr class="sum"><td>合計</td><td>${s[0]}</td><td>${avg.toFixed(1)}</td><td>${hv.toFixed(1)}</td><td>${s[5]}</td><td>${s[4]}</td><td>${s[3]}</td><td>${s[2]}</td><td>${s[1]}</td></tr>`;
   }
-  return `<div class="panel"><h3>${title}</h3><div class="tbl"><table><thead><tr><th>小區</th><th>名單</th><th>主日平均</th><th>家聚會平均</th><th>主日 8～11 次</th><th>主日 5～7 次</th><th>主日 2～4 次</th><th>主日 1 次</th><th>主日 0 次</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  return `<div class="panel"><h3>${title}</h3><div class="tbl"><table><thead><tr><th>小區</th><th>名單</th><th>主日平均（扣兒童）</th><th>家聚會平均</th><th>主日 8～11 次</th><th>主日 5～7 次</th><th>主日 2～4 次</th><th>主日 1 次</th><th>主日 0 次</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 
 function overview(){
