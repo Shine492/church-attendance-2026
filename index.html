@@ -194,7 +194,7 @@ function basePanel(d){
   let h = `<div class="panel"><h3>${d}主日基數對照</h3>
   <div class="tiles">
     <div class="tile cacc"><span class="k">主日基數</span><span class="v">${b.base}<small>人</small></span></div>
-    <div class="tile cacc"><span class="k">每週主日平均（扣兒童）</span><span class="v">${b.avgA.toFixed(1)}<small>人</small></span></div>
+    <div class="tile cacc"><span class="k">每週主日平均（扣兒童）</span><span class="v">${b.avgA.toFixed(0)}<small>人</small></span></div>
     <div class="tile ${b.pct>=1?'cok':b.pct>=0.85?'c57':'c1'}"><span class="k">達成率</span><span class="v">${Math.round(b.pct*100)}<small>%</small></span></div>
     <div class="tile cacc"><span class="k">達到基數的主日</span><span class="v">${b.hit}<small>/ 11 週</small></span></div>
   </div></div>`;
@@ -231,7 +231,7 @@ function groupView(v){
   const onlyHome = ppl.filter(p=>p.S===0 && p.V+p.O>0).length;
   let h = `<div><h2>${v.title}　<span class="sun">主日出席</span></h2><p class="lede">三個大區的${G}名單 ${tot[0]} 人，9/6～11/15 共 11 個主日。下方列出主日至少來過 1 次，或有家聚會接觸的${G}。</p></div>`;
   h += `<div class="tiles">
-    <div class="tile cacc"><span class="k">每週主日平均</span><span class="v">${avgA(allA).toFixed(1)}<small>人</small></span></div>
+    <div class="tile cacc"><span class="k">每週主日平均</span><span class="v">${avgA(allA).toFixed(0)}<small>人</small></span></div>
     <div class="tile cok"><span class="k">主日 8～11 次（穩定）</span><span class="v">${tot[5]}<small>人</small></span></div>
     <div class="tile c57"><span class="k">主日 5～7 次</span><span class="v">${tot[4]}<small>人</small></span></div>
     <div class="tile c24"><span class="k">主日 1～4 次</span><span class="v">${tot[2]+tot[3]}<small>人</small></span></div>
@@ -240,7 +240,7 @@ function groupView(v){
   </div>`;
   // comparison table
   let rows = '';
-  const line = (label, areas, cls) => { const s = sumA(areas); return `<tr class="${cls||''}"><td>${label}</td><td>${s[0]}</td><td>${avgA(areas).toFixed(1)}</td><td>${s[5]}</td><td class="h57">${s[4]}</td><td class="h24">${s[3]}</td><td class="h1">${s[2]}</td><td>${s[1]}</td><td>${s[6]}</td></tr>`; };
+  const line = (label, areas, cls) => { const s = sumA(areas); return `<tr class="${cls||''}"><td>${label}</td><td>${s[0]}</td><td>${avgA(areas).toFixed(0)}</td><td>${s[5]}</td><td class="h57">${s[4]}</td><td class="h24">${s[3]}</td><td class="h1">${s[2]}</td><td>${s[1]}</td><td>${s[6]}</td></tr>`; };
   for (const [d, areas] of DGROUPS){
     rows += line(d + (d==='二十三大區'?'（全區）':''), areas, 'sum');
     if (d==='二十三大區') areas.forEach(a => rows += line('　' + a, [a]));
@@ -279,7 +279,7 @@ function districtView(v){
   const multi = v.areas.length > 1;
   let h = `<div><h2>${v.title}　<span class="sun">主日出席</span></h2><p class="lede">名單 ${st[0]} 人（不含兒童，兒童請看「兒童」分頁）。下面列出 9 月以來主日出席 1～7 次的人，依次數分三段；每列的 11 個圓點代表 11 個主日。</p></div>`;
   h += `<div class="tiles">
-    <div class="tile cacc"><span class="k">每週主日平均（扣兒童）</span><span class="v">${avg.toFixed(1)}<small>人</small></span></div>
+    <div class="tile cacc"><span class="k">每週主日平均（扣兒童）</span><span class="v">${avg.toFixed(0)}<small>人</small></span></div>
     <div class="tile cok"><span class="k">主日 8～11 次（穩定）</span><span class="v">${st[5]}<small>人</small></span></div>
     <div class="tile c57"><span class="k">主日 5～7 次</span><span class="v">${st[4]}<small>人</small></span></div>
     <div class="tile c24"><span class="k">主日 2～4 次</span><span class="v">${st[3]}<small>人</small></span></div>
@@ -288,7 +288,7 @@ function districtView(v){
   </div>`;
   const DN = {'d23':'二十三大區','d34':'三十四大區','d40':'四十大區'}[v.id];
   if (DN) h += basePanel(DN);
-  else if (v.group === '23') { const b = baseInfo('二十三大區'); h += `<p class="note">二十三大區（全區）主日基數 ${b.base} 人，全區每週主日平均（扣兒童）${b.avgA.toFixed(1)} 人，達成率 ${Math.round(b.pct*100)}%。基數設在大區層級，小區沒有個別基數。</p>`; }
+  else if (v.group === '23') { const b = baseInfo('二十三大區'); h += `<p class="note">二十三大區（全區）主日基數 ${b.base} 人，全區每週主日平均（扣兒童）${b.avgA.toFixed(0)} 人，達成率 ${Math.round(b.pct*100)}%。基數設在大區層級，小區沒有個別基數。</p>`; }
   if (v.id === 'd23') h += areaTable(v.areas, '各小區比較', true);
   h += weeklyChart(v.areas);
   h += `<div class="dotkey">每個圓點＝一個主日（深綠＝有來）；上方日期對應每一欄</div><div class="row hdr" aria-hidden="true"><div></div><div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div><div></div><div></div></div>`;
@@ -316,11 +316,11 @@ function areaTable(areas, title, withSum){
   for (const a of areas){
     const d = DATA.areas[a]; if (!d) continue; const s = d.stat;
     const avg = adultWeekly([a]).reduce((p,q)=>p+q,0)/11, hv = d.wv.reduce((p,q)=>p+q,0)/11;
-    rows += `<tr><td>${a}</td><td>${s[0]}</td><td>${avg.toFixed(1)}</td><td>${hv.toFixed(1)}</td><td>${s[5]}</td><td class="h57">${s[4]}</td><td class="h24">${s[3]}</td><td class="h1">${s[2]}</td><td>${s[1]}</td></tr>`;
+    rows += `<tr><td>${a}</td><td>${s[0]}</td><td>${avg.toFixed(0)}</td><td>${hv.toFixed(0)}</td><td>${s[5]}</td><td class="h57">${s[4]}</td><td class="h24">${s[3]}</td><td class="h1">${s[2]}</td><td>${s[1]}</td></tr>`;
   }
   if (withSum){
     const s = sumStat(areas); const avg = adultWeekly(areas).reduce((p,q)=>p+q,0)/11; const hv = areas.reduce((a,x)=>a+DATA.areas[x].wv.reduce((p,q)=>p+q,0),0)/11;
-    rows += `<tr class="sum"><td>合計</td><td>${s[0]}</td><td>${avg.toFixed(1)}</td><td>${hv.toFixed(1)}</td><td>${s[5]}</td><td>${s[4]}</td><td>${s[3]}</td><td>${s[2]}</td><td>${s[1]}</td></tr>`;
+    rows += `<tr class="sum"><td>合計</td><td>${s[0]}</td><td>${avg.toFixed(0)}</td><td>${hv.toFixed(0)}</td><td>${s[5]}</td><td>${s[4]}</td><td>${s[3]}</td><td>${s[2]}</td><td>${s[1]}</td></tr>`;
   }
   return `<div class="panel"><h3>${title}</h3><div class="tbl"><table><thead><tr><th>小區</th><th>名單</th><th>主日平均（扣兒童）</th><th>家聚會平均</th><th>主日 8～11 次</th><th>主日 5～7 次</th><th>主日 2～4 次</th><th>主日 1 次</th><th>主日 0 次</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
@@ -328,7 +328,7 @@ function areaTable(areas, title, withSum){
 function overview(){
   let h = `<div><h2>總覽與建議　<span class="sun">主日出席</span></h2><p class="lede">「不穩定者」指 9/6 以來 11 個主日中出席 1～7 次的人。他們已經來過，只是還沒固定，是最值得投入牧養的一群。以下人數都不含兒童（學齡前、國小）。</p></div>`;
   const all = DATA.people;
-  h += `<div class="tiles">${['22會所','二十三大區','三十四大區','四十大區'].map(d => { const b = baseInfo(d); return `<div class="tile ${b.pct>=1?'cok':b.pct>=0.85?'c57':'c1'}"${d==='22會所'?' style="border-width:2px;border-color:var(--accent)"':''}><span class="k">${d} 每週主日平均（扣兒童）</span><span class="v">${b.avgA.toFixed(1)}<small>人 · 基數 ${b.base}・${Math.round(b.pct*100)}%</small></span></div>`; }).join('')}</div>`;
+  h += `<div class="tiles">${['22會所','二十三大區','三十四大區','四十大區'].map(d => { const b = baseInfo(d); return `<div class="tile ${b.pct>=1?'cok':b.pct>=0.85?'c57':'c1'}"${d==='22會所'?' style="border-width:2px;border-color:var(--accent)"':''}><span class="k">${d} 每週主日平均（扣兒童）</span><span class="v">${b.avgA.toFixed(0)}<small>人 · 基數 ${b.base}・${Math.round(b.pct*100)}%</small></span></div>`; }).join('')}</div>`;
   h += `<div class="tiles">
     <div class="tile cacc"><span class="k">三大區名單（扣兒童）</span><span class="v">${Object.values(DATA.areas).reduce((t,a)=>t+a.stat[0],0)}<small>人</small></span></div>
     <div class="tile c57"><span class="k">主日 5～7 次</span><span class="v">${all.filter(p=>p.S>=5).length}<small>人</small></span></div>
@@ -340,7 +340,7 @@ function overview(){
   { let rows = '';
     for (const d of ['二十三大區','三十四大區','四十大區','22會所']){
       const b = baseInfo(d);
-      rows += `<tr class="${d==='22會所'?'sum':''}"><td>${d==='22會所'?'22會所合計':d}</td><td><b>${b.base}</b></td><td>${b.avgA.toFixed(1)}</td><td><span class="pill ${pctClass(b.pct)}">${Math.round(b.pct*100)}%</span></td><td>${b.hit} / 11</td><td>${b.avgAll.toFixed(1)}</td></tr>`;
+      rows += `<tr class="${d==='22會所'?'sum':''}"><td>${d==='22會所'?'22會所合計':d}</td><td><b>${b.base}</b></td><td>${b.avgA.toFixed(0)}</td><td><span class="pill ${pctClass(b.pct)}">${Math.round(b.pct*100)}%</span></td><td>${b.hit} / 11</td><td>${b.avgAll.toFixed(0)}</td></tr>`;
     }
     h += `<div class="panel"><h3>主日基數對照</h3><div class="tbl"><table><thead><tr><th>大區</th><th>主日基數</th><th>每週主日平均（扣兒童）</th><th>達成率</th><th>達到基數的主日</th><th>每週主日平均（含兒童）</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="note">基數為系統「主日基數（扣兒童主日）」，由會所設定。「扣兒童」是把學齡前、國小的主日出席扣掉後再比較；達成率＝扣兒童平均 ÷ 基數。</p></div>`; }
