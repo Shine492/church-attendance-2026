@@ -195,7 +195,7 @@ function basePanel(d){
   <div class="tiles">
     <div class="tile cacc"><span class="k">主日基數</span><span class="v">${b.base}<small>人</small></span></div>
     <div class="tile cacc"><span class="k">每週主日平均（扣兒童）</span><span class="v">${b.avgA.toFixed(0)}<small>人</small></span></div>
-    <div class="tile ${b.pct>=1?'cok':b.pct>=0.85?'c57':'c1'}"><span class="k">達成率</span><span class="v">${Math.round(b.pct*100)}<small>%</small></span></div>
+    <div class="tile ${b.pct>=1?'cok':b.pct>=0.85?'c57':'c1'}"><span class="k">基數比例</span><span class="v">${Math.round(b.pct*100)}<small>%</small></span></div>
     <div class="tile cacc"><span class="k">達到基數的主日</span><span class="v">${b.hit}<small>/ 11 週</small></span></div>
   </div></div>`;
   h += barChart(b.adult, null, `${d}每週主日人數（扣兒童）與基數`, '', b.base);
@@ -288,7 +288,7 @@ function districtView(v){
   </div>`;
   const DN = {'d23':'二十三大區','d34':'三十四大區','d40':'四十大區'}[v.id];
   if (DN) h += basePanel(DN);
-  else if (v.group === '23') { const b = baseInfo('二十三大區'); h += `<p class="note">二十三大區（全區）主日基數 ${b.base} 人，全區每週主日平均（扣兒童）${b.avgA.toFixed(0)} 人，達成率 ${Math.round(b.pct*100)}%。基數設在大區層級，小區沒有個別基數。</p>`; }
+  else if (v.group === '23') { const b = baseInfo('二十三大區'); h += `<p class="note">二十三大區（全區）主日基數 ${b.base} 人，全區每週主日平均（扣兒童）${b.avgA.toFixed(0)} 人，基數比例 ${Math.round(b.pct*100)}%。基數設在大區層級，小區沒有個別基數。</p>`; }
   if (v.id === 'd23') h += areaTable(v.areas, '各小區比較', true);
   h += weeklyChart(v.areas);
   h += `<div class="dotkey">每個圓點＝一個主日（深綠＝有來）；上方日期對應每一欄</div><div class="row hdr" aria-hidden="true"><div></div><div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div><div></div><div></div></div>`;
@@ -342,8 +342,8 @@ function overview(){
       const b = baseInfo(d);
       rows += `<tr class="${d==='22會所'?'sum':''}"><td>${d==='22會所'?'22會所合計':d}</td><td><b>${b.base}</b></td><td>${b.avgA.toFixed(0)}</td><td><span class="pill ${pctClass(b.pct)}">${Math.round(b.pct*100)}%</span></td><td>${b.hit} / 11</td><td>${b.avgAll.toFixed(0)}</td></tr>`;
     }
-    h += `<div class="panel"><h3>主日基數對照</h3><div class="tbl"><table><thead><tr><th>大區</th><th>主日基數</th><th>每週主日平均（扣兒童）</th><th>達成率</th><th>達到基數的主日</th><th>每週主日平均（含兒童）</th></tr></thead><tbody>${rows}</tbody></table></div>
-    <p class="note">基數為系統「主日基數（扣兒童主日）」，由會所設定。「扣兒童」是把學齡前、國小的主日出席扣掉後再比較；達成率＝扣兒童平均 ÷ 基數。</p></div>`; }
+    h += `<div class="panel"><h3>主日基數對照</h3><div class="tbl"><table><thead><tr><th>大區</th><th>主日基數</th><th>每週主日平均（扣兒童）</th><th>基數比例</th><th>達到基數的主日</th><th>每週主日平均（含兒童）</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <p class="note">基數為系統「主日基數（扣兒童主日）」，由會所設定。「扣兒童」是把學齡前、國小的主日出席扣掉後再比較；基數比例＝扣兒童平均 ÷ 基數。</p></div>`; }
   { const b = baseInfo('22會所'); h += barChart(b.adult, null, '22會所每週主日人數（扣兒童）與基數', '', b.base); }
   h += `<div class="cols">${areaTable(['大里','內新','德芳','新里'],'二十三大區',true)}${areaTable(['仁化','草湖'],'三十四大區',true)}${areaTable(['宜欣','太平'],'四十大區',true)}</div>`;
   h += `<p class="note">名單人數含福音朋友、訪客、已結案得少等；「0 次」多為久未聚會或名單待整理。主日平均、家聚會平均為每週人數。</p>`;
