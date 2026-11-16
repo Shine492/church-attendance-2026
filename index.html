@@ -35,6 +35,12 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 header.top{padding-block:28px 12px}
 header.top h1{font-family:var(--f-display);font-weight:800;font-size:clamp(24px,4vw,34px);margin:0;text-wrap:balance}
 header.top p{margin:6px 0 0;color:var(--muted);font-size:13px}
+.topic{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}
+.topic-tag{background:var(--accent);color:var(--surface);font-weight:700;font-size:clamp(18px,3vw,22px);padding:4px 14px;border-radius:8px;letter-spacing:.06em}
+.topic-sub{font-size:15px;font-weight:500}
+h2 .sun{color:var(--accent)}
+.nums .sunday{color:var(--accent);font-weight:700}
+.nums .sunday b{color:var(--accent);font-size:18px}
 nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
 nav.tabs .wrap{display:flex;gap:6px;overflow-x:auto;padding-block:10px;scrollbar-width:thin}
 nav.tabs .grp{display:flex;gap:4px;align-items:center;flex:none}
@@ -114,6 +120,7 @@ td.h57{background:var(--g57-soft)} td.h24{background:var(--g24-soft)} td.h1{back
 <body>
 <header class="top"><div class="wrap">
   <h1>22會所牧養追蹤</h1>
+  <div class="topic"><span class="topic-tag">主日出席情形</span><span class="topic-sub">2026/9/6～11/15 共 11 個主日，每人出席幾次主日</span></div>
   <p>二十三、三十四、四十大區 · 2026/9/6～11/15 共 11 個主日 · 資料擷取 2026-11-16 · 姓名已隱去中間字</p>
 </div></header>
 <nav class="tabs" aria-label="選擇區別"><div class="wrap" id="tabs"></div></nav>
@@ -166,7 +173,7 @@ function dots(s){ return '<div class="dots" aria-label="'+W.map((w,i)=>w+(s[i]==
 function weeklyChart(areas){
   const sun = W.map((_,i) => areas.reduce((a,x) => a + DATA.areas[x].wk[i], 0));
   const home = W.map((_,i) => areas.reduce((a,x) => a + DATA.areas[x].wv[i], 0));
-  return barChart(sun, home, '每週人數', '家聚會受訪');
+  return barChart(sun, home, '每週主日出席人數（旁邊淺色為家聚會受訪）', '家聚會受訪');
 }
 function barChart(sun, home, title, homeLabel){
   const max = Math.max(...sun, ...(home||[]), 1);
@@ -195,13 +202,13 @@ function groupView(v){
   const tot = sumA(allA);
   const ppl = DATA.gpeople.filter(p=>p.g===G);
   const onlyHome = ppl.filter(p=>p.S===0 && p.V+p.O>0).length;
-  let h = `<div><h2>${v.title}</h2><p class="lede">三個大區的${G}名單 ${tot[0]} 人，9/6～11/15 共 11 個主日。下方列出主日至少來過 1 次，或有家聚會接觸的${G}。</p></div>`;
+  let h = `<div><h2>${v.title}　<span class="sun">主日出席</span></h2><p class="lede">三個大區的${G}名單 ${tot[0]} 人，9/6～11/15 共 11 個主日。下方列出主日至少來過 1 次，或有家聚會接觸的${G}。</p></div>`;
   h += `<div class="tiles">
     <div class="tile cacc"><span class="k">每週主日平均</span><span class="v">${avgA(allA).toFixed(1)}<small>人</small></span></div>
-    <div class="tile cok"><span class="k">穩定 8～11 次</span><span class="v">${tot[5]}<small>人</small></span></div>
-    <div class="tile c57"><span class="k">5～7 次</span><span class="v">${tot[4]}<small>人</small></span></div>
-    <div class="tile c24"><span class="k">1～4 次</span><span class="v">${tot[2]+tot[3]}<small>人</small></span></div>
-    <div class="tile c1"><span class="k">11 週都沒來</span><span class="v">${tot[1]}<small>/ ${tot[0]}</small></span></div>
+    <div class="tile cok"><span class="k">主日 8～11 次（穩定）</span><span class="v">${tot[5]}<small>人</small></span></div>
+    <div class="tile c57"><span class="k">主日 5～7 次</span><span class="v">${tot[4]}<small>人</small></span></div>
+    <div class="tile c24"><span class="k">主日 1～4 次</span><span class="v">${tot[2]+tot[3]}<small>人</small></span></div>
+    <div class="tile c1"><span class="k">11 週主日都沒來</span><span class="v">${tot[1]}<small>/ ${tot[0]}</small></span></div>
     <div class="tile c24"><span class="k">有家聚會、沒來主日</span><span class="v">${onlyHome}<small>人</small></span></div>
   </div>`;
   // comparison table
@@ -211,10 +218,10 @@ function groupView(v){
     rows += line(d + (d==='二十三大區'?'（全區）':''), areas, 'sum');
     if (d==='二十三大區') areas.forEach(a => rows += line('　' + a, [a]));
   }
-  h += `<div class="panel"><h3>各區比較</h3><div class="tbl"><table><thead><tr><th>區</th><th>名單</th><th>主日平均</th><th>8～11 次</th><th>5～7 次</th><th>2～4 次</th><th>1 次</th><th>0 次</th><th>有家聚會</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  h += `<div class="panel"><h3>各區比較</h3><div class="tbl"><table><thead><tr><th>區</th><th>名單</th><th>主日平均</th><th>主日 8～11 次</th><th>主日 5～7 次</th><th>主日 2～4 次</th><th>主日 1 次</th><th>主日 0 次</th><th>有家聚會</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
   h += barChart(W.map((_,i)=>allA.reduce((t,a)=>t+((wk[a]||[])[i]||0),0)), null, `每週主日${G}人數（三個大區合計）`);
   h += `<div class="panel advice"><h3>觀察與建議</h3><ul>${DATA.gadvice[G].map(i=>`<li>${esc(i)}</li>`).join('')}</ul></div>`;
-  h += `<div class="dotkey">圓點順序：<div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div></div>`;
+  h += `<div class="dotkey">每個圓點＝一個主日（深綠＝有來）：<div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div></div>`;
   const status = p => { const H=p.V+p.O; if(p.S>=8) return ['穩定','p-ok']; if(p.S>=5) return ['接近穩定','p-yel']; if(p.S>=1) return [H?'不穩定':'不穩定・無家聚會','p-org']; return ['有家聚會，未來主日','p-red']; };
   const sec = (label, areas, sub) => {
     const g = ppl.filter(p=>areas.includes(p.a)).sort((a,b)=>(areas.indexOf(a.a)-areas.indexOf(b.a))||(b.S-a.S)||((b.V+b.O)-(a.V+a.O)));
@@ -223,7 +230,7 @@ function groupView(v){
     for (const p of g){
       const [t,c] = status(p), home = p.V+p.O;
       s += `<div class="row"><div class="who"><b>${esc(p.n)}</b>${p.tag?`<span class="chip">${esc(p.tag)}</span>`:''}<span class="chip">${esc(p.r)}</span>${sub?`<span class="chip area">${esc(p.a)}</span>`:''}</div>
-        ${dots(p.s)}<div class="nums"><span>主日 <b>${p.S}</b>/11</span><span class="${home?'':'zero'}">家聚會 <b>${home}</b></span></div>
+        ${dots(p.s)}<div class="nums"><span class="sunday">主日 <b>${p.S}</b>/11</span><span class="${home?'':'zero'}">家聚會 <b>${home}</b></span></div>
         <div class="tip"><span class="pill ${c}">${t}</span></div></div>`;
     }
     return s + '</div></section>';
@@ -243,18 +250,18 @@ function districtView(v){
   const avg = v.areas.reduce((a,x)=>a+DATA.areas[x].wk.reduce((p,q)=>p+q,0),0)/11;
   const noHome = ppl.filter(p => p.V+p.O===0).length;
   const multi = v.areas.length > 1;
-  let h = `<div><h2>${v.title}</h2><p class="lede">名單 ${st[0]} 人。下面列出 9 月以來主日出席 1～7 次的人，依次數分三段；每列的 11 個圓點代表 11 個主日。</p></div>`;
+  let h = `<div><h2>${v.title}　<span class="sun">主日出席</span></h2><p class="lede">名單 ${st[0]} 人。下面列出 9 月以來主日出席 1～7 次的人，依次數分三段；每列的 11 個圓點代表 11 個主日。</p></div>`;
   h += `<div class="tiles">
     <div class="tile cacc"><span class="k">每週主日平均</span><span class="v">${avg.toFixed(1)}<small>人</small></span></div>
-    <div class="tile cok"><span class="k">穩定 8～11 次</span><span class="v">${st[5]}<small>人</small></span></div>
-    <div class="tile c57"><span class="k">5～7 次</span><span class="v">${st[4]}<small>人</small></span></div>
-    <div class="tile c24"><span class="k">2～4 次</span><span class="v">${st[3]}<small>人</small></span></div>
-    <div class="tile c1"><span class="k">1 次</span><span class="v">${st[2]}<small>人</small></span></div>
+    <div class="tile cok"><span class="k">主日 8～11 次（穩定）</span><span class="v">${st[5]}<small>人</small></span></div>
+    <div class="tile c57"><span class="k">主日 5～7 次</span><span class="v">${st[4]}<small>人</small></span></div>
+    <div class="tile c24"><span class="k">主日 2～4 次</span><span class="v">${st[3]}<small>人</small></span></div>
+    <div class="tile c1"><span class="k">主日 1 次</span><span class="v">${st[2]}<small>人</small></span></div>
     <div class="tile c1"><span class="k">以上 1～7 次者中無家聚會</span><span class="v">${noHome}<small>/ ${ppl.length}</small></span></div>
   </div>`;
   if (v.id === 'd23') h += areaTable(v.areas, '各小區比較', true);
   h += weeklyChart(v.areas);
-  h += `<div class="dotkey">圓點順序：<div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div></div>`;
+  h += `<div class="dotkey">每個圓點＝一個主日（深綠＝有來）：<div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div></div>`;
   const bands = [['b57','主日 5～7 次','接近穩定，差一步就固定',5,7],['b24','主日 2～4 次','不穩定，需要牧養',2,4],['b1','主日 1 次','幾乎流失或剛來，需主動聯繫',1,1]];
   for (const [cls,t,d,lo,hi] of bands){
     const g = ppl.filter(p => p.S>=lo && p.S<=hi).sort((a,b) => (v.areas.indexOf(a.a)-v.areas.indexOf(b.a)) || (b.S-a.S) || ((a.V+a.O)-(b.V+b.O)));
@@ -265,7 +272,7 @@ function districtView(v){
       h += `<div class="row">
         <div class="who"><b>${esc(p.n)}</b>${p.tag?`<span class="chip">${esc(p.tag)}</span>`:''}<span class="chip">${esc(p.r)}</span>${multi?`<span class="chip area">${esc(p.a)}</span>`:''}</div>
         ${dots(p.s)}
-        <div class="nums"><span>主日 <b>${p.S}</b>/11</span><span class="${home?'':'zero'}">家聚會 <b>${home}</b></span></div>
+        <div class="nums"><span class="sunday">主日 <b>${p.S}</b>/11</span><span class="${home?'':'zero'}">家聚會 <b>${home}</b></span></div>
         <div class="tip">${tips(p).map(([x,w])=>`<span class="${w?'warn':''}">${x}</span>`).join('')}</div>
       </div>`;
     }
@@ -285,17 +292,17 @@ function areaTable(areas, title, withSum){
     const s = sumStat(areas); const avg = areas.reduce((a,x)=>a+DATA.areas[x].wk.reduce((p,q)=>p+q,0),0)/11; const hv = areas.reduce((a,x)=>a+DATA.areas[x].wv.reduce((p,q)=>p+q,0),0)/11;
     rows += `<tr class="sum"><td>合計</td><td>${s[0]}</td><td>${avg.toFixed(1)}</td><td>${hv.toFixed(1)}</td><td>${s[5]}</td><td>${s[4]}</td><td>${s[3]}</td><td>${s[2]}</td><td>${s[1]}</td></tr>`;
   }
-  return `<div class="panel"><h3>${title}</h3><div class="tbl"><table><thead><tr><th>小區</th><th>名單</th><th>主日平均</th><th>家聚會平均</th><th>8～11 次</th><th>5～7 次</th><th>2～4 次</th><th>1 次</th><th>0 次</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+  return `<div class="panel"><h3>${title}</h3><div class="tbl"><table><thead><tr><th>小區</th><th>名單</th><th>主日平均</th><th>家聚會平均</th><th>主日 8～11 次</th><th>主日 5～7 次</th><th>主日 2～4 次</th><th>主日 1 次</th><th>主日 0 次</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
 }
 
 function overview(){
-  let h = `<div><h2>總覽與建議</h2><p class="lede">「不穩定者」指 9/6 以來 11 個主日中出席 1～7 次的人。他們已經來過，只是還沒固定，是最值得投入牧養的一群。</p></div>`;
+  let h = `<div><h2>總覽與建議　<span class="sun">主日出席</span></h2><p class="lede">「不穩定者」指 9/6 以來 11 個主日中出席 1～7 次的人。他們已經來過，只是還沒固定，是最值得投入牧養的一群。</p></div>`;
   const all = DATA.people;
   h += `<div class="tiles">
     <div class="tile cacc"><span class="k">三大區名單</span><span class="v">880<small>人</small></span></div>
-    <div class="tile c57"><span class="k">5～7 次</span><span class="v">${all.filter(p=>p.S>=5).length}<small>人</small></span></div>
-    <div class="tile c24"><span class="k">2～4 次</span><span class="v">${all.filter(p=>p.S>=2&&p.S<=4).length}<small>人</small></span></div>
-    <div class="tile c1"><span class="k">1 次</span><span class="v">${all.filter(p=>p.S===1).length}<small>人</small></span></div>
+    <div class="tile c57"><span class="k">主日 5～7 次</span><span class="v">${all.filter(p=>p.S>=5).length}<small>人</small></span></div>
+    <div class="tile c24"><span class="k">主日 2～4 次</span><span class="v">${all.filter(p=>p.S>=2&&p.S<=4).length}<small>人</small></span></div>
+    <div class="tile c1"><span class="k">主日 1 次</span><span class="v">${all.filter(p=>p.S===1).length}<small>人</small></span></div>
     <div class="tile c1"><span class="k">不穩定者中無家聚會</span><span class="v">${all.filter(p=>p.V+p.O===0).length}<small>人</small></span></div>
     <div class="tile cok"><span class="k">今年受浸</span><span class="v">${DATA.bap.length}<small>人</small></span></div>
   </div>`;
@@ -310,14 +317,14 @@ function baptism(){
   const list = [...DATA.bap].sort((a,b)=>(order[a.d]-order[b.d])||a.a.localeCompare(b.a)||a.date.localeCompare(b.date));
   const status = p => { const H=p.V+p.O; if(p.S===0&&H===0) return ['完全沒有聚會，立刻探訪','p-red']; if(p.S===0) return ['有家聚會，未來主日','p-org']; if(p.S<=4) return ['不穩定','p-org']; if(p.S<=7) return ['接近穩定','p-yel']; return ['穩定','p-ok']; };
   const red = list.filter(p=>p.S===0&&p.V+p.O===0).length;
-  let h = `<div><h2>2026 年受浸者</h2><p class="lede">三個大區今年受浸 ${list.length} 位。下列是他們 9/6～11/15 的主日與家聚會情形；虛線圓點是受浸日之前的主日。</p></div>`;
+  let h = `<div><h2>2026 年受浸者　<span class="sun">主日出席</span></h2><p class="lede">三個大區今年受浸 ${list.length} 位。下列是他們 9/6～11/15 的主日與家聚會情形；虛線圓點是受浸日之前的主日。</p></div>`;
   h += `<div class="tiles">
-    <div class="tile cok"><span class="k">穩定 8 次以上</span><span class="v">${list.filter(p=>p.S>=8).length}<small>人</small></span></div>
-    <div class="tile c57"><span class="k">5～7 次</span><span class="v">${list.filter(p=>p.S>=5&&p.S<=7).length}<small>人</small></span></div>
-    <div class="tile c24"><span class="k">1～4 次</span><span class="v">${list.filter(p=>p.S>=1&&p.S<=4).length}<small>人</small></span></div>
+    <div class="tile cok"><span class="k">主日 8 次以上（穩定）</span><span class="v">${list.filter(p=>p.S>=8).length}<small>人</small></span></div>
+    <div class="tile c57"><span class="k">主日 5～7 次</span><span class="v">${list.filter(p=>p.S>=5&&p.S<=7).length}<small>人</small></span></div>
+    <div class="tile c24"><span class="k">主日 1～4 次</span><span class="v">${list.filter(p=>p.S>=1&&p.S<=4).length}<small>人</small></span></div>
     <div class="tile c1"><span class="k">主日、家聚會都是 0</span><span class="v">${red}<small>人</small></span></div>
   </div>`;
-  h += `<div class="dotkey">圓點順序：<div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div></div><div class="rows">`;
+  h += `<div class="dotkey">每個圓點＝一個主日（深綠＝有來）：<div class="dots">${W.map(w=>`<span>${w}</span>`).join('')}</div></div><div class="rows">`;
   const sundays = DATA.sundays;
   for (const p of list){
     const [st,cls] = status(p); const home=p.V+p.O;
@@ -325,7 +332,7 @@ function baptism(){
     h += `<div class="row">
       <div class="who"><b>${esc(p.n)}</b>${p.tag?`<span class="chip">${esc(p.tag)}</span>`:''}<span class="chip">${esc(p.r)}</span><span class="chip area">${esc(p.a)}</span></div>
       <div class="dots">${d}</div>
-      <div class="nums"><span>受浸 <b style="font-size:13px">${p.date.slice(5).replace('-','/')}</b></span><span>主日 <b>${p.S}</b></span><span class="${home?'':'zero'}">家聚會 <b>${home}</b></span></div>
+      <div class="nums"><span>受浸 <b style="font-size:13px">${p.date.slice(5).replace('-','/')}</b></span><span class="sunday">主日 <b>${p.S}</b>/11</span><span class="${home?'':'zero'}">家聚會 <b>${home}</b></span></div>
       <div class="tip"><span class="pill ${cls}">${st}</span></div>
     </div>`;
   }
