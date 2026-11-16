@@ -196,7 +196,7 @@ function basePanel(d){
     <div class="tile cacc"><span class="k">主日基數</span><span class="v">${b.base}<small>人</small></span></div>
     <div class="tile cacc"><span class="k">每週主日平均（扣兒童）</span><span class="v">${b.avgA.toFixed(0)}<small>人</small></span></div>
     <div class="tile ${b.pct>=1?'cok':b.pct>=0.85?'c57':'c1'}"><span class="k">基數比例</span><span class="v">${Math.round(b.pct*100)}<small>%</small></span></div>
-    <div class="tile cacc"><span class="k">達到基數的主日</span><span class="v">${b.hit}<small>/ 11 週</small></span></div>
+    <div class="tile cacc"><span class="k">主日人數達到基數的週數</span><span class="v">${b.hit}<small>/ 11 週</small></span></div>
   </div></div>`;
   h += barChart(b.adult, null, `${d}每週主日人數（扣兒童）與基數`, '', b.base);
   return h;
@@ -342,7 +342,7 @@ function overview(){
       const b = baseInfo(d);
       rows += `<tr class="${d==='22會所'?'sum':''}"><td>${d==='22會所'?'22會所合計':d}</td><td><b>${b.base}</b></td><td>${b.avgA.toFixed(0)}</td><td><span class="pill ${pctClass(b.pct)}">${Math.round(b.pct*100)}%</span></td><td>${b.hit} / 11</td><td>${b.avgAll.toFixed(0)}</td></tr>`;
     }
-    h += `<div class="panel"><h3>主日基數對照</h3><div class="tbl"><table><thead><tr><th>大區</th><th>主日基數</th><th>每週主日平均（扣兒童）</th><th>基數比例</th><th>達到基數的主日</th><th>每週主日平均（含兒童）</th></tr></thead><tbody>${rows}</tbody></table></div>
+    h += `<div class="panel"><h3>主日基數對照</h3><div class="tbl"><table><thead><tr><th>大區</th><th>主日基數</th><th>每週主日平均（扣兒童）</th><th>基數比例</th><th>主日人數達到基數的週數</th><th>每週主日平均（含兒童）</th></tr></thead><tbody>${rows}</tbody></table></div>
     <p class="note">基數為系統「主日基數（扣兒童主日）」，由會所設定。「扣兒童」是把學齡前、國小的主日出席扣掉後再比較；基數比例＝扣兒童平均 ÷ 基數。</p></div>`; }
   { const b = baseInfo('22會所'); h += barChart(b.adult, null, '22會所每週主日人數（扣兒童）與基數', '', b.base); }
   h += `<div class="cols">${areaTable(['大里','內新','德芳','新里'],'二十三大區',true)}${areaTable(['仁化','草湖'],'三十四大區',true)}${areaTable(['宜欣','太平'],'四十大區',true)}</div>`;
