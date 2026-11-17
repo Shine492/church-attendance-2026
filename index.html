@@ -517,16 +517,22 @@ function paintCare(){
   const bar = document.getElementById('carebar');
   if (bar) bar.querySelector('.cnt').innerHTML = tot ? `已指定牧養 <b>${got}</b> / ${tot} 位${tot-got?`，還有 <b style="color:var(--g1)">${tot-got}</b> 位沒有確定的人照顧`:'，每一位都有人照顧'}` : '';
 }
+const CLAUDE_URL = 'https://claude.ai/artifact/A69zw4GQ4VAi2U6tAFTW8n';
 function careBar(){
-  if (!careDB || currentId()==='overview') return '';
+  if (currentId()==='overview') return '';
+  if (!careDB) {
+    if (!window.claude) return `<div class="carebar"><span>牧養聖徒（誰負責照顧）只在 Claude 版填寫與查看：</span><a href="${CLAUDE_URL}" target="_blank" rel="noopener"><b>開啟 Claude 版</b></a></div>`;
+    if (!careErr) return `<div class="carebar"><span class="note">牧養聖徒資料讀取中…</span></div>`;
+    return `<div class="carebar"><span>${careErr}。如果是在 Claude App 裏打開，請改用手機瀏覽器（Safari 或 Chrome）打開連結並登入 Claude。</span></div>`;
+  }
   const only = $('#view').classList.contains('only-none');
   return `<div class="carebar" id="carebar"><span class="cnt"></span><button class="${only?'':'ghost'}" onclick="$('#view').classList.toggle('only-none');render()">${only?'顯示全部':'只看未指定的'}</button>${careRO?'<span class="note">你目前只能查看，無法修改</span>':''}</div>`;
 }
 (async () => {
   if (!window.claude || !window.claude.use) return;
-  let db = null; try { db = await window.claude.use('db'); } catch(e) {}
-  if (!db) { careErr = '目前無法讀取牧養資料（可能尚未登入）'; return; }
-  careDB = db;
+  let db = null; const giveUp = setTimeout(() => { if (!careDB && !careErr) { careErr = '這裏讀不到牧養聖徒資料'; render(); } }, 12000); try { db = await window.claude.use('db'); } catch(e) {}
+  if (!db) { careErr = '這裏讀不到牧養聖徒資料'; render(); return; }
+  clearTimeout(giveUp); careDB = db; careErr = '';
   try { const u = await window.claude.use('user'); if (u && (await u.can('data.write')) === false) careRO = true; } catch(e) {}
   render();
   const timer = setTimeout(() => { if (!careReady) { careErr = '牧養資料暫時讀不到'; } }, 10000);
