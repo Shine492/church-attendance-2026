@@ -479,27 +479,49 @@ function toggleRow(row){
 }
 document.addEventListener('click', e => { const r = e.target.closest('.row[data-k]'); if (r) toggleRow(r); });
 document.addEventListener('keydown', e => { if ((e.key==='Enter'||e.key===' ') && e.target.matches('.row[data-k]')) { e.preventDefault(); toggleRow(e.target); } });
-/* ---- 牧養聖徒：存在 Claude 版的共用資料（care/<id>），GitHub 版只讀不到 ---- */
-const CARE = {}; let careDB = null, careReady = false, careRO = false, careErr = '';
+/* ---- 牧養聖徒：存在 Supabase（care 表，只存聖徒代號與負責人），兩個版本共用 ---- */
+const SB_URL = 'https://jzvfyrimogjyarqhnlrs.supabase.co/rest/v1';
+const SB_KEY = 'sb_publishable_8xr6DGp1YbcoYjAdmHEkJg_joHiIs7u';
+const SB_H = {apikey: SB_KEY, 'Content-Type': 'application/json'};
+const CARE = {}; let careDB = null, careReady = false, careErr = '';
+let careCode = ''; try { careCode = localStorage.getItem('careCode') || ''; } catch(e) {}
+function setCode(c){ careCode = c; try { c ? localStorage.setItem('careCode', c) : localStorage.removeItem('careCode'); } catch(e) {} }
 function careEditor(p){
-  if (!careDB) return `<div class="cedit"><label>牧養聖徒</label><span class="msg">${careErr || '這個版本無法填寫，請到 Claude 版填寫與查看'}</span></div>`;
+  if (!careDB) return `<div class="cedit"><label>牧養聖徒</label><span class="msg">${careErr || '牧養資料讀取中…'}</span></div>`;
   const c = CARE[p.id];
   const by = c && c.at ? `　最後更新 ${c.at.slice(5,10).replace('-','/')}` : '';
-  if (careRO) return `<div class="cedit"><label>牧養聖徒</label><b>${c&&c.who?esc(c.who):'尚未指定'}</b><span class="msg">（你目前只能查看）${by}</span></div>`;
-  return `<div class="cedit"><label for="ce-${p.id}">牧養聖徒</label><input id="ce-${p.id}" data-id="${p.id}" maxlength="40" placeholder="填入負責照顧的人" value="${c&&c.who?esc(c.who):''}" onkeydown="if(event.key==='Enter'){event.preventDefault();saveCare('${p.id}')}"><button onclick="saveCare('${p.id}')">儲存</button>${c&&c.who?`<button class="ghost" onclick="saveCare('${p.id}',true)">清除</button>`:''}<span class="msg" id="cm-${p.id}">${by}</span></div>`;
+  const codeIn = careCode ? '' : `<input id="cc-${p.id}" type="password" autocomplete="off" placeholder="填寫密碼（第一次需要）" style="max-width:170px">`;
+  return `<div class="cedit"><label for="ce-${p.id}">牧養聖徒</label><input id="ce-${p.id}" data-id="${p.id}" maxlength="40" placeholder="填入負責照顧的人" value="${c&&c.who?esc(c.who):''}" onkeydown="if(event.key==='Enter'){event.preventDefault();saveCare('${p.id}')}">${codeIn}<button onclick="saveCare('${p.id}')">儲存</button>${c&&c.who?`<button class="ghost" onclick="saveCare('${p.id}',true)">清除</button>`:''}<span class="msg" id="cm-${p.id}">${by}</span></div>`;
 }
 async function saveCare(id, clear){
-  const inp = document.getElementById('ce-'+id), msg = document.getElementById('cm-'+id);
+  const inp = document.getElementById('ce-'+id), msg = document.getElementById('cm-'+id), ci = document.getElementById('cc-'+id);
+  const code = careCode || (ci ? ci.value.trim() : '');
+  if (!code) { if (msg) msg.textContent = '請先輸入填寫密碼（向負責人索取）'; if (ci) ci.focus(); return; }
   const who = clear ? '' : (inp.value||'').trim().slice(0,40);
   if (msg) msg.textContent = '儲存中…';
   try {
-    const ref = careDB.collection('care').doc(id);
-    if (who) await ref.set({who, at:new Date().toISOString()}); else await ref.delete();
-    if (msg) msg.textContent = '已儲存，大家都看得到';
+    const r = await fetch(SB_URL + '/rpc/set_care', {method:'POST', headers:SB_H, body:JSON.stringify({p_id:id, p_who:who, p_code:code})});
+    if (r.status === 403 || r.status === 401) { setCode(''); if (msg) msg.textContent = '填寫密碼不對，請重新輸入'; const row = inp.closest('.row'); const h = row.querySelector('.hist'); if (h) { h.outerHTML = histHTML(REG[+row.dataset.k]); } return; }
+    if (!r.ok) throw new Error(r.status);
+    setCode(code);
+    if (who) CARE[id] = {who, at:new Date().toISOString()}; else delete CARE[id];
+    paintCare();
     if (clear && inp) inp.value = '';
+    if (ci) ci.remove();
+    if (msg) msg.textContent = '已儲存，大家重新打開就看得到';
+  } catch(e) { if (msg) msg.textContent = '沒有存成功，請檢查網路後再試'; }
+}
+async function loadCare(){
+  try {
+    const r = await fetch(SB_URL + '/care?select=id,who,updated_at', {headers:SB_H, cache:'no-store'});
+    if (!r.ok) throw new Error(r.status);
+    const rows = await r.json();
+    for (const k in CARE) delete CARE[k];
+    rows.forEach(x => { CARE[x.id] = {who:x.who, at:x.updated_at}; });
+    const first = !careDB; careDB = true; careReady = true; careErr = '';
+    if (first) render(); else paintCare();
   } catch(e) {
-    if (e && e.code === 'invalid_argument') { careRO = true; if (msg) msg.textContent = '你目前只有查看權限，無法修改'; }
-    else if (msg) msg.textContent = '沒有存成功，請稍後再試';
+    if (!careDB) { careErr = '牧養資料暫時讀不到，請稍後重新整理'; render(); }
   }
 }
 function paintCare(){
@@ -512,38 +534,20 @@ function paintCare(){
     let s = row.querySelector('.who .care');
     if (!s) { s = document.createElement('span'); row.querySelector('.who').appendChild(s); }
     s.className = 'care' + (who ? '' : ' none');
-    s.textContent = careReady ? (who ? '牧養：' + who : '未指定牧養') : '牧養：讀取中…';
+    s.textContent = who ? '牧養：' + who : '未指定牧養';
   });
   const bar = document.getElementById('carebar');
   if (bar) bar.querySelector('.cnt').innerHTML = tot ? `已指定牧養 <b>${got}</b> / ${tot} 位${tot-got?`，還有 <b style="color:var(--g1)">${tot-got}</b> 位沒有確定的人照顧`:'，每一位都有人照顧'}` : '';
 }
-const CLAUDE_URL = 'https://claude.ai/artifact/A69zw4GQ4VAi2U6tAFTW8n';
 function careBar(){
   if (currentId()==='overview') return '';
-  if (!careDB) {
-    if (!window.claude) return `<div class="carebar"><span>牧養聖徒（誰負責照顧）只在 Claude 版填寫與查看：</span><a href="${CLAUDE_URL}" target="_blank" rel="noopener"><b>開啟 Claude 版</b></a></div>`;
-    if (!careErr) return `<div class="carebar"><span class="note">牧養聖徒資料讀取中…</span></div>`;
-    return `<div class="carebar"><span>${careErr}。如果是在 Claude App 裏打開，請改用手機瀏覽器（Safari 或 Chrome）打開連結並登入 Claude。</span></div>`;
-  }
+  if (!careDB) return `<div class="carebar"><span class="note">${careErr || '牧養聖徒資料讀取中…'}</span></div>`;
   const only = $('#view').classList.contains('only-none');
-  return `<div class="carebar" id="carebar"><span class="cnt"></span><button class="${only?'':'ghost'}" onclick="$('#view').classList.toggle('only-none');render()">${only?'顯示全部':'只看未指定的'}</button>${careRO?'<span class="note">你目前只能查看，無法修改</span>':''}</div>`;
+  return `<div class="carebar" id="carebar"><span class="cnt"></span><button class="${only?'':'ghost'}" onclick="$('#view').classList.toggle('only-none');render()">${only?'顯示全部':'只看未指定的'}</button><span class="note">點名字即可填寫牧養聖徒</span></div>`;
 }
-(async () => {
-  if (!window.claude || !window.claude.use) return;
-  let db = null; const giveUp = setTimeout(() => { if (!careDB && !careErr) { careErr = '這裏讀不到牧養聖徒資料'; render(); } }, 12000); try { db = await window.claude.use('db'); } catch(e) {}
-  if (!db) { careErr = '這裏讀不到牧養聖徒資料'; render(); return; }
-  clearTimeout(giveUp); careDB = db; careErr = '';
-  try { const u = await window.claude.use('user'); if (u && (await u.can('data.write')) === false) careRO = true; } catch(e) {}
-  render();
-  const timer = setTimeout(() => { if (!careReady) { careErr = '牧養資料暫時讀不到'; } }, 10000);
-  db.collection('care').onSnapshot(snap => {
-    for (const k in CARE) delete CARE[k];
-    snap.docs.forEach(d => { CARE[d.id] = d.data(); });
-    if (!snap.metadata.fromCache) clearTimeout(timer);
-    careReady = true; paintCare();
-    document.querySelectorAll('.cedit .msg[id^="cm-"]').forEach(m => { const c = CARE[m.id.slice(3)]; if (c && c.at && !m.textContent.includes('已儲存')) m.textContent = '　最後更新 ' + c.at.slice(5,10).replace('-','/'); });
-  }, () => { careErr = '牧養資料讀取失敗'; });
-})();
+loadCare();
+setInterval(() => { if (document.visibilityState === 'visible') loadCare(); }, 60000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') loadCare(); });
 function render(){
   REG = [];
   const id = currentId(); const v = VIEWS.find(x=>x.id===id);
