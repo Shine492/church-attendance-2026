@@ -501,7 +501,7 @@ async function saveCare(id, clear){
   if (msg) msg.textContent = '儲存中…';
   try {
     const r = await fetch(SB_URL + '/rpc/set_care', {method:'POST', headers:SB_H, body:JSON.stringify({p_id:id, p_who:who, p_code:code})});
-    if (r.status === 403 || r.status === 401) { setCode(''); if (msg) msg.textContent = '填寫密碼不對，請重新輸入'; const row = inp.closest('.row'); const h = row.querySelector('.hist'); if (h) { h.outerHTML = histHTML(REG[+row.dataset.k]); } return; }
+    if (r.status === 403 || r.status === 401) { setCode(''); if (msg) msg.textContent = '填寫密碼不對，請重新輸入'; const row = inp.closest('.row'); const h = row.querySelector('.hist'); if (h) { h.outerHTML = histHTML(REG[+row.dataset.k]); } const m2 = document.getElementById('cm-'+id); if (m2) m2.textContent = '填寫密碼不對，請重新輸入'; const i2 = document.getElementById('ce-'+id); if (i2) i2.value = who; return; }
     if (!r.ok) throw new Error(r.status);
     setCode(code);
     if (who) CARE[id] = {who, at:new Date().toISOString()}; else delete CARE[id];
