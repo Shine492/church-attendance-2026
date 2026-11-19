@@ -128,6 +128,12 @@ nav.tabs .grp + .grp{border-left:1px solid var(--line);padding-left:8px;margin-l
 .cedit button,.carebar button{font:inherit;font-size:13px;padding:5px 12px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer}
 .cedit button.ghost,.carebar button.ghost{background:transparent;color:var(--accent)}
 .cedit .msg{font-size:12px;color:var(--muted)}
+.cbtn{font:inherit;font-size:12px;padding:1px 9px;border-radius:999px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer;min-height:26px}
+.wcare{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.wcare .cedit{flex:1 1 auto}
+.wcare>button{font:inherit;font-size:13px;padding:5px 12px;border-radius:6px;border:1px solid var(--accent);background:transparent;color:var(--accent);cursor:pointer}
+.subhead{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:20px 0 4px;padding:8px 12px;border-radius:8px;background:var(--accent-soft);border-left:4px solid var(--accent)}
+.subhead h4{margin:0;font-size:16px}
 .carebar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13px;padding:8px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 .carebar b{font-size:15px}
 #view.only-none .row[data-k].has-care{display:none}
@@ -257,6 +263,7 @@ const VIEWS = [
   {id:'teens', label:'青少年', title:'青少年（國中、高中）', g:'青少年'},
   {id:'young-adults', label:'青職', title:'青職', g:'青職'}
 ];
+const SPLIT = ['二十三大區'];   // 本週出席頁再分小區顯示的大區
 const DGROUPS = [['二十三大區',['大里','內新','德芳','新里']],['三十四大區',['仁化','草湖']],['四十大區',['宜欣','太平','四十大區(直屬)']]];
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -543,7 +550,8 @@ document.addEventListener('click', e => { const r = e.target.closest('.row[data-
 document.addEventListener('keydown', e => { if ((e.key==='Enter'||e.key===' ') && e.target.matches('.row[data-k]')) { e.preventDefault(); toggleRow(e.target); } });
 /* ---- 本週出席與關心確認（checkin 表：每位聖徒每週一筆） ---- */
 const REASONS = ['生病／身體不適','出遊／返鄉','工作／加班','在別處聚會','家裏有事','已聯絡，沒有回應','其他'];
-const CHK = {}; let chkReady = false, chkErr = '', chkOpen = '';
+const CHK = {}; let chkReady = false, chkErr = '', chkOpen = '', careOpen = '';
+const busy = () => document.querySelector('.cform, .wcare');
 async function loadChk(){
   if (!DATA.week) return;
   try {
@@ -554,7 +562,7 @@ async function loadChk(){
     rows.forEach(x => { CHK[x.id] = x; });
     chkReady = true; chkErr = '';
   } catch(e) { if (!chkReady) chkErr = '確認紀錄暫時讀不到，請稍後重新整理'; }
-  if (currentId() === 'week' && !document.querySelector('.cform')) { const y = scrollY; render(); scrollTo(0, y); }
+  if (currentId() === 'week' && !busy()) { const y = scrollY; render(); scrollTo(0, y); }
 }
 const md = d => { const [, m, dd] = d.split('-'); return `${+m}/${+dd}`; };
 function wRow(p){
@@ -569,12 +577,12 @@ function wRow(p){
   } else if (c) {
     chk = `<div class="chk"><span class="ok">✓ 已關心：${esc(c.reason)}</span>${c.note?`<span>${esc(c.note)}</span>`:''}<span class="note">${md(c.updated_at.slice(0,10))}</span><button class="ghost" onclick="chkOpen='${p.id}';render()">修改</button></div>`;
   } else {
-    chk = `<div class="chk">${chkReady?`<button onclick="chkOpen='${p.id}';render()">我已關心，按此確認</button>`:`<span class="note">${chkErr||'讀取確認紀錄中…'}</span>`}</div>`;
+    chk = `<div class="chk">${chkReady?`<button onclick="chkOpen='${p.id}';careOpen='';render()">我已關心，按此確認</button>`:`<span class="note">${chkErr||'讀取確認紀錄中…'}</span>`}</div>`;
   }
   return `<div class="wrow ${c?'done':''}">
-    <div class="wtop"><div class="who"><b>${esc(p.n)}</b>${p.tag?`<span class="chip">${esc(p.tag)}</span>`:''}<span class="chip">${esc(p.r)}</span><span class="chip area">${esc(p.a)}</span>${careReady?`<span class="care ${careWho?'':'none'}">${careWho?'牧養：'+esc(careWho):'未指定牧養'}</span>`:''}</div>
+    <div class="wtop"><div class="who"><b>${esc(p.n)}</b>${p.tag?`<span class="chip">${esc(p.tag)}</span>`:''}<span class="chip">${esc(p.r)}</span><span class="chip area">${esc(p.a)}</span>${careReady?`<span class="care ${careWho?'':'none'}">${careWho?'牧養：'+esc(careWho):'未指定牧養'}</span>${careOpen===p.id?'':`<button class="ghost cbtn" onclick="careOpen='${p.id}';chkOpen='';render()">✎ ${careWho?'改':'填'}牧養</button>`}`:''}</div>
     <div class="wdots" aria-label="近 11 週主日">${dots}</div>
-    <span class="wmeta">近 11 週 <b>${p.S}</b> 次 · 上次來 <b>${p.last||'—'}</b> · 家聚會 <b>${p.V+p.O}</b></span></div>${chk}</div>`;
+    <span class="wmeta">近 11 週 <b>${p.S}</b> 次 · 上次來 <b>${p.last||'—'}</b> · 家聚會 <b>${p.V+p.O}</b></span></div>${careOpen===p.id?`<div class="wcare">${careEditor(p)}<button class="ghost" onclick="careOpen='';render()">關閉</button></div>`:''}${chk}</div>`;
 }
 function weekView(){
   const W = DATA.week; const sun = md(W.sunday);
@@ -584,25 +592,34 @@ function weekView(){
   const only = $('#view').classList.contains('only-open');
   let h = `<div><h2>本週出席　<span class="sun">${sun} 主日</span></h2><p class="lede">每週一中午自動從點名系統更新（最近一次：${esc(W.updated)}）。下面列出<b>接近穩定</b>（近 11 週來 6～8 次）和<b>穩定</b>（9～11 次）的聖徒中，${sun} 沒有來主日的人，請負責弟兄這週內一位一位關心。</p></div>`;
   h += `<div class="howto"><h3>這一頁怎麼用</h3><ol>
-    <li>找到你負責的聖徒（名字旁有「牧養：○○」），打電話、傳訊息或探訪，問候他這週為什麼沒來。</li>
+    <li>找到你負責的聖徒（名字旁有「牧養：○○」；還沒有人負責的，按「✎ 填牧養」寫上照顧的人），打電話、傳訊息或探訪，問候他這週為什麼沒來。</li>
     <li>聯繫後按「<b>我已關心，按此確認</b>」，選一個原因，可以寫一句簡單說明，再按儲存（第一次要輸入填寫密碼）。</li>
     <li>確認後這一位會變成綠色，大家都看得到。目標是每一位紅色名單在下週日前都有人關心。</li>
   </ol></div>`;
   h += `<div class="carebar"><span>本週需要關心 <b>${need.length}</b> 位，已確認 <b style="color:var(--ok)">${done}</b> 位${need.length-done?`，還有 <b style="color:var(--g1)">${need.length-done}</b> 位還沒有人確認`:'，全部都關心到了'}</span><button class="${only?'':'ghost'}" onclick="$('#view').classList.toggle('only-open');render()">${only?'顯示全部':'只看還沒確認的'}</button></div>`;
-  for (const [dname, areas] of DGROUPS) {
-    const ps = all.filter(p => areas.includes(p.a));
-    const now = areas.reduce((s,a)=>s+((W.areas[a]||{}).now||0),0), avg = areas.reduce((s,a)=>s+((W.areas[a]||{}).avg||0),0);
+  const stat = areas => [areas.reduce((s,a)=>s+((W.areas[a]||{}).now||0),0), areas.reduce((s,a)=>s+((W.areas[a]||{}).avg||0),0)];
+  const lists = ps => {
     const g1 = ps.filter(p => !p.here && p.S <= 8), g2 = ps.filter(p => !p.here && p.S >= 9), g3 = ps.filter(p => p.here);
-    const dn = [...g1, ...g2].filter(p => CHK[p.id]).length;
-    h += `<section class="band"><div class="band-head" style="background:var(--g1-soft);border-left:6px solid var(--g1)"><h3>${dname}　${sun} 主日 ${now} 人</h3><span>近 11 週平均 ${avg} 人（不含兒童）· 需要關心 ${g1.length+g2.length} 位，已確認 ${dn} 位</span><button class="shotbtn" onclick="shotWeekDistrict('${dname}')">📷 截圖給負責弟兄</button></div>`;
-    h += `<div class="wsec"><h4 style="color:var(--g1)">接近穩定、${sun} 沒有來（請優先關心）　${g1.length} 位</h4>${g1.length?g1.sort((a,b)=>b.S-a.S).map(wRow).join(''):'<div class="empty">沒有，感謝主</div>'}</div>`;
-    h += `<div class="wsec"><h4>穩定、${sun} 沒有來（問候一下）　${g2.length} 位</h4>${g2.length?g2.sort((a,b)=>b.S-a.S).map(wRow).join(''):'<div class="empty">沒有</div>'}</div>`;
-    if (g3.length && !only) h += `<div class="wsec"><h4 style="color:var(--ok)">接近穩定、${sun} 有來（鼓勵他們繼續）　${g3.length} 位</h4><div class="chiplist">${g3.map(p=>`<span>${esc(p.n)} · ${esc(p.a)} · ${p.S} 次</span>`).join('')}</div></div>`;
+    let s = `<div class="wsec"><h4 style="color:var(--g1)">接近穩定、${sun} 沒有來（請優先關心）　${g1.length} 位</h4>${g1.length?g1.sort((a,b)=>b.S-a.S).map(wRow).join(''):'<div class="empty">沒有，感謝主</div>'}</div>`;
+    s += `<div class="wsec"><h4>穩定、${sun} 沒有來（問候一下）　${g2.length} 位</h4>${g2.length?g2.sort((a,b)=>b.S-a.S).map(wRow).join(''):'<div class="empty">沒有</div>'}</div>`;
+    if (g3.length && !only) s += `<div class="wsec"><h4 style="color:var(--ok)">接近穩定、${sun} 有來（鼓勵他們繼續）　${g3.length} 位</h4><div class="chiplist">${g3.map(p=>`<span>${esc(p.n)} · ${esc(p.a)} · ${p.S} 次</span>`).join('')}</div></div>`;
+    return s;
+  };
+  const needOf = ps => ps.filter(p => !p.here), doneOf = ps => needOf(ps).filter(p => CHK[p.id]).length;
+  for (const [dname, areas] of DGROUPS) {
+    const ps = all.filter(p => areas.includes(p.a)); const [now, avg] = stat(areas);
+    h += `<section class="band"><div class="band-head" style="background:var(--g1-soft);border-left:6px solid var(--g1)"><h3>${dname}　${sun} 主日 ${now} 人</h3><span>近 11 週平均 ${avg} 人（不含兒童）· 需要關心 ${needOf(ps).length} 位，已確認 ${doneOf(ps)} 位</span><button class="shotbtn" onclick="shotWeekDistrict('${dname}')">📷 截圖給負責弟兄</button></div>`;
+    if (SPLIT.includes(dname)) {
+      for (const a of areas) {
+        const pa = ps.filter(p => p.a === a); const [n2, v2] = stat([a]);
+        h += `<div class="subhead"><h4>${esc(a)}小區　${sun} 主日 ${n2} 人</h4><span class="note">近 11 週平均 ${v2} 人 · 需要關心 ${needOf(pa).length} 位，已確認 ${doneOf(pa)} 位</span><button class="shotbtn" onclick="shotWeekDistrict('${dname}','${a}')">📷 截圖給小區負責</button></div>` + lists(pa);
+      }
+    } else h += lists(ps);
     h += '</section>';
   }
   const sh = careReady ? shepherds() : [];
   h += `<section class="band"><div class="band-head" style="background:var(--accent-soft);border-left:6px solid var(--accent)"><h3>依牧養聖徒（給每一位牧養的弟兄姊妹）</h3><span>按名字做成一張圖，傳給他，讓他知道負責的每一位聖徒這週情形</span></div>
-    <div class="chiplist">${!careReady ? '<span>讀取中…</span>' : sh.length ? sh.map(([w,ps]) => { const miss = ps.filter(p => { const s = (DATA.week.bits[p.id]||p.s); return s[s.length-1] !== '1'; }).length; return `<button class="shepbtn" onclick="shotShepherd(this.dataset.w)" data-w="${esc(w)}">📷 ${esc(w)}　${ps.length} 位${miss?`（${miss} 位沒來）`:''}</button>`; }).join('') : '<span>還沒有人指定牧養聖徒。到各區分頁點名字，就可以填「牧養聖徒」。</span>'}</div></section>`;
+    <div class="chiplist">${!careReady ? '<span>讀取中…</span>' : sh.length ? sh.map(([w,ps]) => { const miss = ps.filter(p => { const s = (DATA.week.bits[p.id]||p.s); return s[s.length-1] !== '1'; }).length; return `<button class="shepbtn" onclick="shotShepherd(this.dataset.w)" data-w="${esc(w)}">📷 ${esc(w)}　${ps.length} 位${miss?`（${miss} 位沒來）`:''}</button>`; }).join('') : '<span>還沒有人指定牧養聖徒。在上面名單按「✎ 填牧養」，或到各區分頁點名字，就可以填。</span>'}</div></section>`;
   h += `<p class="note">「近 11 週」是 ${sun} 往前算 11 個主日（含本週）。不含兒童（學齡前、國小）。圓點有外框的是本週。</p>`;
   return h;
 }
@@ -690,8 +707,9 @@ function shotPage(){
   const sections = B.map(([h,lo,hi,c,s]) => ({head:h, color:c, soft:s, rows: ps.filter(p => p.S>=lo && p.S<=hi).map(p => ({n:p.n, sub:`${p.a} · ${p.r}`, s:p.s, right:`${p.S}/11`, care:careTxt(p.id), status:[`家聚會 ${p.V+p.O}`]}))})).filter(x => x.rows.length);
   showShot(drawCard({title: v.title + '　主日出席', sub: `${DATA.weeks[0]}～${DATA.weeks[10]} 共 11 個主日 · ${ps.length} 位`, labels: DATA.weeks, sections, foot: shotDate()}), v.title);
 }
-function shotWeekDistrict(dname){
-  const W = DATA.week, areas = DGROUPS.find(x => x[0] === dname)[1], sun = md(W.sunday);
+function shotWeekDistrict(dname, area){
+  const W = DATA.week, areas = area ? [area] : DGROUPS.find(x => x[0] === dname)[1], sun = md(W.sunday);
+  if (area) dname = `${dname} ${area}小區`;
   const ps = W.people.filter(p => areas.includes(p.a) && !p.here);
   const row = p => { const c = CHK[p.id]; return {n:p.n, sub:`${p.a} · ${p.r}`, s:p.s, ring:true, right:`${p.S}/11`, care:careTxt(p.id), status: c ? ['✓ 已關心：' + c.reason + (c.note ? '（' + c.note + '）' : ''), 'acc'] : ['尚未確認，請這週關心', 'red']}; };
   const now = areas.reduce((s,a)=>s+((W.areas[a]||{}).now||0),0), avg = areas.reduce((s,a)=>s+((W.areas[a]||{}).avg||0),0);
@@ -725,7 +743,7 @@ function careEditor(p){
   const c = CARE[p.id];
   const by = c && c.at ? `　最後更新 ${c.at.slice(5,10).replace('-','/')}` : '';
   const codeIn = careCode ? '' : `<input id="cc-${p.id}" type="password" autocomplete="off" placeholder="填寫密碼（第一次需要）" style="max-width:170px">`;
-  return `<div class="cedit"><label for="ce-${p.id}">牧養聖徒</label><input id="ce-${p.id}" data-id="${p.id}" maxlength="40" placeholder="填入負責照顧的人" value="${c&&c.who?esc(c.who):''}" onkeydown="if(event.key==='Enter'){event.preventDefault();saveCare('${p.id}')}">${codeIn}<button onclick="saveCare('${p.id}')">儲存</button>${c&&c.who?`<button class="ghost" onclick="saveCare('${p.id}',true)">清除</button>`:''}<span class="msg" id="cm-${p.id}">${by}</span></div>`;
+  return `<div class="cedit"><label for="ce-${p.id}">牧養聖徒</label><input id="ce-${p.id}" data-id="${p.id}" maxlength="40" list="shepList" placeholder="填入負責照顧的人" value="${c&&c.who?esc(c.who):''}" onkeydown="if(event.key==='Enter'){event.preventDefault();saveCare('${p.id}')}">${codeIn}<button onclick="saveCare('${p.id}')">儲存</button>${c&&c.who?`<button class="ghost" onclick="saveCare('${p.id}',true)">清除</button>`:''}<span class="msg" id="cm-${p.id}">${by}</span></div>`;
 }
 async function saveCare(id, clear){
   const inp = document.getElementById('ce-'+id), msg = document.getElementById('cm-'+id), ci = document.getElementById('cc-'+id);
@@ -735,10 +753,11 @@ async function saveCare(id, clear){
   if (msg) msg.textContent = '儲存中…';
   try {
     const r = await fetch(SB_URL + '/rpc/set_care', {method:'POST', headers:SB_H, body:JSON.stringify({p_id:id, p_who:who, p_code:code})});
-    if (r.status === 403 || r.status === 401) { setCode(''); if (msg) msg.textContent = '填寫密碼不對，請重新輸入'; const row = inp.closest('.row'); const h = row.querySelector('.hist'); if (h) { h.outerHTML = histHTML(REG[+row.dataset.k]); } const m2 = document.getElementById('cm-'+id); if (m2) m2.textContent = '填寫密碼不對，請重新輸入'; const i2 = document.getElementById('ce-'+id); if (i2) i2.value = who; return; }
+    if (r.status === 403 || r.status === 401) { setCode(''); if (msg) msg.textContent = '填寫密碼不對，請重新輸入'; const row = inp.closest('.row'); if (!row) { const y = scrollY; render(); scrollTo(0, y); } const h = row && row.querySelector('.hist'); if (h) { h.outerHTML = histHTML(REG[+row.dataset.k]); } const m2 = document.getElementById('cm-'+id); if (m2) m2.textContent = '填寫密碼不對，請重新輸入'; const i2 = document.getElementById('ce-'+id); if (i2) i2.value = who; return; }
     if (!r.ok) throw new Error(r.status);
     setCode(code);
     if (who) CARE[id] = {who, at:new Date().toISOString()}; else delete CARE[id];
+    if (!inp.closest('.row')) { careOpen = ''; const y = scrollY; render(); scrollTo(0, y); return; }
     paintCare();
     if (clear && inp) inp.value = '';
     if (ci) ci.remove();
@@ -753,7 +772,7 @@ async function loadCare(){
     for (const k in CARE) delete CARE[k];
     rows.forEach(x => { CARE[x.id] = {who:x.who, at:x.updated_at}; });
     const first = !careDB; careDB = true; careReady = true; careErr = '';
-    if (first || (currentId()==='week' && !document.querySelector('.cform'))) { const y = scrollY; render(); scrollTo(0, y); } else paintCare();
+    if (first || (currentId()==='week' && !busy())) { const y = scrollY; render(); scrollTo(0, y); } else paintCare();
   } catch(e) {
     if (!careDB) { careErr = '牧養資料暫時讀不到，請稍後重新整理'; render(); }
   }
@@ -788,6 +807,9 @@ function render(){
   const shotBar = id==='overview' ? '' : `<div class="shotbar"><button onclick="shotPage()">📷 一鍵截圖這頁</button><span class="note">做成一張圖，可傳給負責弟兄</span></div>`;
   $('#view').innerHTML = id==='week' ? weekView() : shotBar + careBar() + (id==='overview' ? overview() : id==='baptism' ? baptism() : v.g ? groupView(v) : districtView(v));
   tabs(); paintCare();
+  let dl = document.getElementById('shepList');
+  if (!dl) { dl = document.createElement('datalist'); dl.id = 'shepList'; document.body.appendChild(dl); }
+  dl.innerHTML = [...new Set(Object.values(CARE).map(c => c.who).filter(Boolean))].map(w => `<option value="${esc(w)}">`).join('');
 }
 window.addEventListener('hashchange', () => { render(); window.scrollTo({top:0}); });
 render();
